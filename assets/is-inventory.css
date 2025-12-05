@@ -1,0 +1,83 @@
+/* --- Inventory Sync Custom Styles --- */
+
+/* Style for the Master Inventory List Table (Point 4: Zoom/Adjustable Width) */
+.is-matrix-container {
+    overflow-x: auto; /* Enables horizontal scrolling for "Zoom Out" effect */
+    width: 100%;
+    margin-top: 10px;
+}
+
+.is-matrix-table {
+    min-width: 1000px; /* Ensure table is wide enough to force scroll if many power columns exist */
+    border-collapse: collapse;
+}
+
+/* Make Series Name and Total Stock sticky (Point 4) */
+.is-matrix-table th.column-series-name-sticky,
+.is-matrix-table td.series_name {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background-color: #f9f9f9; /* Light grey background */
+    border-right: 1px solid #c3c4c7;
+    min-width: 150px;
+    box-shadow: 2px 0 2px rgba(0,0,0,0.05);
+}
+
+.is-matrix-table th.column-total-stock-sticky,
+.is-matrix-table td.total_stock {
+    position: sticky;
+    left: 150px; /* Offset by the width of the first column */
+    z-index: 2;
+    background-color: #fffde7; /* Yellowish background to highlight total stock */
+    border-right: 1px solid #c3c4c7;
+    min-width: 100px;
+    box-shadow: 2px 0 2px rgba(0,0,0,0.05);
+    font-weight: bold;
+}
+
+/* Style for the Total Stock Input fields */
+.is-bulk-stock-input {
+    text-align: center;
+    padding: 3px;
+    line-height: 1;
+    font-size: 12px;
+}
+
+/* Header style fix for sticky columns */
+.is-matrix-table thead th {
+    background-color: #f3f3f3;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+/* Custom style for Grand Total statement */
+.is-grand-total-statement {
+    margin-top: 15px;
+    padding: 10px;
+    border-top: 2px solid #007cba;
+    background-color: #e5f5ff;
+}
+
+.is-total-stock-value {
+    color: #007cba;
+    font-size: 1.5em;
+}
+
+.is-matrix-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Ensure pagination uses the full width */
+.tablenav {
+    clear: both;
+}
+
+/* Hide the main form's submit button to only show the Save/Export buttons below the table */
+#is-filter-form {
+    margin-bottom: 10px;
+}
