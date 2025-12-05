@@ -1213,43 +1213,7 @@ class IS_Inventory_List_Table extends WP_List_Table
         ]);
         // --- End Pagination Logic ---
     }
-    public function master_inventory_page() {
-        // --- 1. Check for Bulk Stock Update Submission ---
-        if ( isset( $_POST['is_bulk_save_stock'] ) && current_user_can( 'manage_woocommerce' ) ) {
-            // Call the stock processing function directly
-            $this->handle_bulk_stock_submission(); 
-            // Add a transient message for success/failure (optional but recommended)
-            $this->add_admin_notice( 'Stock updates processed successfully.', 'success' );
-        }
 
-        // ... (rest of the page rendering code)
-        // ... (The form starts here)
-        ?>
-        <div class="wrap">
-            <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-            <?php $this->render_admin_notices(); // Make sure this function exists to show the notice ?>
-
-            <form id="is-bulk-inventory-form" method="post" action="<?php echo esc_url( remove_query_arg( ['updated', 'settings-updated'] ) ); ?>">
-                <?php 
-                // CRUCIAL: Add a security nonce field and reference the processing function
-                wp_nonce_field( 'is-bulk-stock-update', 'is_bulk_stock_nonce' ); 
-                ?>
-                <p class="is-bulk-save-status"></p>
-                <div class="is-controls">
-                    <input type="submit" name="is_bulk_save_stock" id="is-bulk-save-stock" class="button button-primary" value="Save Changes (Locally)">
-                    <button id="is-export-button" class="button" data-nonce="<?php echo wp_create_nonce( 'is-export-inventory' ); ?>">Export Inventory (CSV)</button>
-                </div>
-                
-                <?php 
-                // ... (rest of the table rendering)
-                $list_table = new IS_Inventory_List_Table();
-                $list_table->prepare_items();
-                $list_table->display(); 
-                ?>
-            </form>
-        </div>
-        <?php
-    }
     // Overriding search_box for cleaner implementation (Point 3)
     public function search_box($text, $input_id)
     {
