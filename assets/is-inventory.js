@@ -107,7 +107,7 @@ jQuery(document).ready(function($) {
 
     // CRITICAL FIX: Bind to the form's 'submit' event to prevent default HTML submission.
     $('#is-bulk-inventory-form').on('submit', function(e) {
-        e.preventDefault(); 
+        // e.preventDefault(); 
         
         var button = $('#is-bulk-save-stock');
         var originalText = button.val();
