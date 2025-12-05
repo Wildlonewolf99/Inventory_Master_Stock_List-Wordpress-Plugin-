@@ -305,48 +305,78 @@ public function ajax_update_variation_stock() {
 		}
 	}
 
-public function ajax_bulk_update_master_stock() {
-check_ajax_referer( $this->nonce_action, 'nonce' );
-if ( ! current_user_can( 'manage_woocommerce' ) ) {
-wp_send_json_error( 'Permission denied', 403 );
-}
+/**
+	 * AJAX handler for bulk updating the master stock list.
+	 * Expects: $_POST['updates'] = array of { variation_id: ID, stock: QUANTITY }
+	 */
+	public function ajax_bulk_update_master_stock() {
+		// 1. Security Check
+		check_ajax_referer( 'is-inventory-nonce', 'nonce' );
 
-$updates = $_POST['updates'] ?? [];
-$results = [];
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => 'Permission denied.' ] );
+		}
 
-if ( ! is_array( $updates ) ) {
-wp_send_json_error( 'Invalid data structure', 400 );
-}
+		// 2. Retrieve and Validate Data
+		$updates = isset( $_POST['updates'] ) ? map_deep( $_POST['updates'], 'sanitize_text_field' ) : [];
 
-foreach( $updates as $update ) {
-$sku = sanitize_text_field( $update['sku'] ?? '' );
-$stock = isset($update['stock']) ? floatval($update['stock']) : null;
+		if ( empty( $updates ) || ! is_array( $updates ) ) {
+			wp_send_json_error( [ 'message' => 'No updates received.' ] );
+		}
 
-if ( empty( $sku ) || $stock === null ) {
-$results[] = [ 'sku' => 'N/A', 'status' => 'Skipped: Missing SKU or stock' ];
-continue;
-}
+		$success_count = 0;
+		$results       = [];
 
-$product_id = wc_get_product_id_by_sku( $sku );
-$product = $product_id ? wc_get_product( $product_id ) : false;
+		// 3. Process Updates
+		foreach ( $updates as $update ) {
+			$variation_id = intval( $update['variation_id'] ?? 0 );
+			$new_stock    = intval( $update['stock'] ?? 0 );
+			$status       = 'failed';
+			$message      = 'Unknown error';
 
-// A SKU could belong to a Simple product or a Variation
-if ( ! $product || ( ! $product->is_type('simple') && ! $product->is_type('variation') ) ) {
-$results[] = [ 'sku' => $sku, 'status' => 'Not found or invalid type' ];
-continue;
-}
+			if ( $variation_id > 0 ) {
+				try {
+					$product = wc_get_product( $variation_id );
 
-// Update stock quantity and status using WC CRUD
-$product->set_manage_stock( true );
-$product->set_stock_quantity( $stock );
-$product->set_stock_status( $stock > 0 ? 'instock' : 'outofstock' );
-$product->save();
+					if ( $product ) {
+						// Ensure stock is managed
+						if ( ! $product->get_manage_stock() ) {
+							$product->set_manage_stock( true );
+						}
 
-$results[] = [ 'sku' => $sku, 'stock' => $stock, 'status' => 'updated' ];
-}
+						// Update stock quantity
+						$product->set_stock_quantity( $new_stock );
+						$product->save();
 
-wp_send_json_success( [ 'results' => $results, 'count' => count( $results ) ] );
-}
+						$status        = 'updated';
+						$message       = 'Stock updated.';
+						$success_count++;
+					} else {
+						$message = 'Product/Variation not found.';
+					}
+				} catch ( \Exception $e ) {
+					$message = 'WooCommerce error: ' . $e->getMessage();
+				}
+			} else {
+				$message = 'Invalid Variation ID.';
+			}
+
+			// Store result for JavaScript feedback
+			$results[] = [
+				'variation_id' => $variation_id,
+				'stock'        => $new_stock,
+				'status'       => $status,
+				'message'      => $message,
+			];
+		}
+
+		// 4. Send Success Response
+		wp_send_json_success( [
+			'message' => 'Bulk update complete.',
+			'count'   => $success_count,
+			'results' => $results,
+		] );
+	}
 
 // NEW AJAX HANDLER FOR EXPORT (Point 6)
 public function ajax_export_inventory() {
